@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hostel Violation Tracker – Dashboard</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      display: flex;
+      height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #1e293b;
+      overflow: hidden;
+    }
+    
+    .sidebar {
+      width: 280px;
+      background: rgba(30, 41, 59, 0.95);
+      backdrop-filter: blur(10px);
+      color: white;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      box-shadow: 4px 0 24px rgba(0, 0, 0, 0.2);
+    }
+    
+    .sidebar h2 {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 32px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .nav-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.7);
+      padding: 14px 18px;
+      text-align: left;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 500;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .nav-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 0;
+      height: 100%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      transition: width 0.3s ease;
+      z-index: 0;
+    }
+    
+    .nav-btn:hover {
+      color: white;
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateX(4px);
+    }
+    
+    .nav-btn:hover::before {
+      width: 100%;
+    }
+    
+    .nav-btn span {
+      position: relative;
+      z-index: 1;
+    }
+    
+    .nav-btn.active {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-color: transparent;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .main {
+      flex: 1;
+      padding: 32px;
+      overflow: auto;
+      background: #f8fafc;
+    }
+    
+    h1 {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      color: #1e293b;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .section {
+      display: none;
+      animation: fadeIn 0.4s ease;
+    }
+    
+    .section.active {
+      display: block;
+    }
+    
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 10px 15px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      transition: all 0.3s ease;
+    }
+    
+    .card:hover {
+      box-shadow: 0 8px 12px rgba(0, 0, 0, 0.1), 0 16px 24px rgba(0, 0, 0, 0.15);
+      transform: translateY(-2px);
+    }
+    
+    .card h3 {
+      margin: 0 0 20px 0;
+      font-size: 20px;
+      font-weight: 600;
+      color: #334155;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .card h3::before {
+      content: '';
+      width: 4px;
+      height: 24px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 2px;
+    }
+    
+    form {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      align-items: flex-end;
+    }
+    
+    label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #475569;
+      display: block;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    input, select {
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 10px;
+      border: 2px solid #e2e8f0;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      background: #f8fafc;
+    }
+    
+    input:focus, select:focus {
+      outline: none;
+      border-color: #667eea;
+      background: white;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+    
+    /* Date/Time input wrapper with bubble */
+    .input-wrapper {
+      position: relative;
+    }
+    
+    .input-bubble {
+      position: absolute;
+      top: -8px;
+      right: 12px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+      z-index: 10;
+      pointer-events: none;
+      animation: bubblePop 0.3s ease;
+    }
+    
+    @keyframes bubblePop {
+      0% {
+        transform: scale(0);
+        opacity: 0;
+      }
+      50% {
+        transform: scale(1.1);
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+    
+    .input-wrapper input[type="datetime-local"],
+    .input-wrapper input[type="date"] {
+      padding-right: 16px;
+    }
+    
+    button {
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .btn {
+      padding: 12px 24px;
+      border-radius: 10px;
+      border: none;
+      font-size: 14px;
+      font-weight: 600;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .btn::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
+      pointer-events: none;
+    }
+    
+    .btn:active::after {
+      width: 300px;
+      height: 300px;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(102, 126, 234, 0.5);
+    }
+    
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+    
+    .btn-secondary {
+      background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+      color: white;
+      box-shadow: 0 4px 12px rgba(100, 116, 139, 0.3);
+    }
+    
+    .btn-secondary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(100, 116, 139, 0.4);
+    }
+    
+    .btn-danger {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      color: white;
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+      padding: 8px 16px;
+      font-size: 13px;
+    }
+    
+    .btn-danger:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      margin-top: 16px;
+      font-size: 14px;
+      overflow: hidden;
+      border-radius: 12px;
+    }
+    
+    th, td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    
+    th {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 12px;
+      letter-spacing: 0.5px;
+    }
+    
+    th:first-child {
+      border-top-left-radius: 12px;
+    }
+    
+    th:last-child {
+      border-top-right-radius: 12px;
+    }
+    
+    tbody tr {
+      background: white;
+      transition: all 0.2s ease;
+    }
+    
+    tbody tr:hover {
+      background: #f8fafc;
+      transform: scale(1.01);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+    
+    tbody tr:last-child td:first-child {
+      border-bottom-left-radius: 12px;
+    }
+    
+    tbody tr:last-child td:last-child {
+      border-bottom-right-radius: 12px;
+    }
+    
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    
+    .info-note {
+      font-size: 13px;
+      margin-top: 12px;
+      padding: 12px 16px;
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+      border-left: 4px solid #667eea;
+      border-radius: 8px;
+      color: #475569;
+    }
+    
+    .info-note b {
+      color: #667eea;
+    }
+    
+    /* Loading animation */
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    .loading-row {
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    
+    /* Scrollbar styling */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    }
+    
+    /* Modal/Dialog Styles */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.3s ease;
+    }
+    
+    .modal-overlay.active {
+      display: flex;
+    }
+    
+    .modal-content {
+      background: white;
+      border-radius: 20px;
+      padding: 32px;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      animation: slideUp 0.3s ease;
+      position: relative;
+    }
+    
+    @keyframes slideUp {
+      from {
+        transform: translateY(50px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+    
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    
+    .modal-header h2 {
+      font-size: 24px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin: 0;
+    }
+    
+    .modal-close {
+      background: #f1f5f9;
+      border: none;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      transition: all 0.3s ease;
+    }
+    
+    .modal-close:hover {
+      background: #e2e8f0;
+      transform: rotate(90deg);
+    }
+    
+    .modal-body {
+      margin-bottom: 24px;
+    }
+    
+    .modal-input-group {
+      margin-bottom: 16px;
+    }
+    
+    .modal-input-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #475569;
+    }
+    
+    .modal-input-group input {
+      width: 100%;
+      padding: 14px 16px;
+      border-radius: 12px;
+      border: 2px solid #e2e8f0;
+      font-size: 15px;
+      transition: all 0.3s ease;
+      background: #f8fafc;
+    }
+    
+    .modal-input-group input:focus {
+      outline: none;
+      border-color: #667eea;
+      background: white;
+      box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    }
+    
+    .modal-footer {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+    
+    .btn-modal-cancel {
+      background: #e2e8f0;
+      color: #475569;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-modal-cancel:hover {
+      background: #cbd5e1;
+    }
+    
+    .btn-modal-confirm {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-modal-confirm:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(102, 126, 234, 0.5);
+    }
+    
+    /* Date/Time Display Button */
+    .datetime-display-btn {
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 10px;
+      border: 2px solid #e2e8f0;
+      font-size: 14px;
+      background: #f8fafc;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #64748b;
+    }
+    
+    .datetime-display-btn:hover {
+      border-color: #667eea;
+      background: white;
+    }
+    
+    .datetime-display-btn.has-value {
+      color: #1e293b;
+      font-weight: 500;
+    }
+    
+    .datetime-icon {
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Date/Time Modal -->
+  <div class="modal-overlay" id="datetime-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modal-title">📅 Select Date & Time</h2>
+        <button class="modal-close" id="modal-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-input-group">
+          <label id="modal-label">Choose Date and Time</label>
+          <input type="datetime-local" id="modal-datetime-input" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-modal-cancel" id="modal-cancel">Cancel</button>
+        <button class="btn-modal-confirm" id="modal-confirm">✓ Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Date Modal -->
+  <div class="modal-overlay" id="date-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>📅 Select Date</h2>
+        <button class="modal-close" id="date-modal-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-input-group">
+          <label>Choose Date</label>
+          <input type="date" id="modal-date-input" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-modal-cancel" id="date-modal-cancel">Cancel</button>
+        <button class="btn-modal-confirm" id="date-modal-confirm">✓ Confirm</button>
+      </div>
+    </div>
+  </div>
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <h2>🏠 Hostel Tracker</h2>
+    <button class="nav-btn active" data-section-btn="students">
+      <span>👥 Students</span>
+    </button>
+    <button class="nav-btn" data-section-btn="entry">
+      <span>📋 Entry Logs</span>
+    </button>
+    <button class="nav-btn" data-section-btn="violations">
+      <span>⚠️ Violations</span>
+    </button>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+    <h1 id="section-title">👥 Students</h1>
+
+    <!-- STUDENTS SECTION -->
+    <section class="section active" id="section-students">
+      <div class="card">
+        <h3>Add / Update Student</h3>
+        <form id="student-form">
+          <div>
+            <label>Student ID</label>
+            <input type="text" id="student-id" placeholder="e.g., student_105" />
+          </div>
+          <div>
+            <label>Name</label>
+            <input type="text" id="student-name" placeholder="Enter full name" required />
+          </div>
+          <div>
+            <label>Department</label>
+            <input type="text" id="student-dept" placeholder="e.g., Computer Science" required />
+          </div>
+          <div>
+            <label>Room No</label>
+            <input type="text" id="student-room" placeholder="e.g., A-101" required />
+          </div>
+          <div>
+            <label>Phone</label>
+            <input type="text" id="student-phone" placeholder="10-digit number" required />
+          </div>
+          <div>
+            <label>Parent Contact</label>
+            <input type="text" id="student-parent" placeholder="Parent's phone" required />
+          </div>
+          <div>
+            <button type="submit" class="btn btn-primary">💾 Save Student</button>
+          </div>
+        </form>
+        <div class="info-note">
+          💡 If <b>Student ID</b> exists, the record will be updated. If it's new, a record will be created with that ID.
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="toolbar">
+          <button id="reload-students" class="btn btn-secondary">🔄 Reload Students</button>
+        </div>
+        <table id="students-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Department</th>
+              <th>Room</th>
+              <th>Phone</th>
+              <th>Parent Contact</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ENTRY LOGS SECTION -->
+    <section class="section" id="section-entry">
+      <div class="card">
+        <h3>Add Entry Log</h3>
+        <form id="entry-form">
+          <div>
+            <label>Student ID</label>
+            <input type="text" id="entry-student-id" placeholder="e.g., student_105" required />
+          </div>
+          <div class="input-wrapper">
+            <label>Entry Time</label>
+            <span class="input-bubble">📅 Date & Time</span>
+            <button type="button" class="datetime-display-btn" id="entry-time-btn" data-target="entry-time">
+              <span id="entry-time-display">Click to select date & time</span>
+              <span class="datetime-icon">📅</span>
+            </button>
+            <input type="hidden" id="entry-time" required />
+          </div>
+          <div class="input-wrapper">
+            <label>Exit Time</label>
+            <span class="input-bubble">📅 Date & Time</span>
+            <button type="button" class="datetime-display-btn" id="exit-time-btn" data-target="exit-time">
+              <span id="exit-time-display">Click to select date & time</span>
+              <span class="datetime-icon">📅</span>
+            </button>
+            <input type="hidden" id="exit-time" />
+          </div>
+          <div>
+            <label>Is Late Entry?</label>
+            <select id="is-late-entry">
+              <option value="false">No</option>
+              <option value="true">Yes</option>
+            </select>
+          </div>
+          <div>
+            <label>Remarks</label>
+            <input type="text" id="entry-remarks" placeholder="Optional notes" />
+          </div>
+          <div>
+            <button type="submit" class="btn btn-primary">💾 Save Entry</button>
+          </div>
+        </form>
+        <div class="info-note">
+          💡 <b>Auto-violation:</b> If "Is Late Entry?" is set to <b>Yes</b>, a violation will be automatically created with a ₹200 fine.
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="toolbar">
+          <button id="reload-entries" class="btn btn-secondary">📋 All Entries</button>
+          <button id="show-late-entries" class="btn btn-secondary">⏰ Late Entries Only</button>
+        </div>
+        <table id="entry-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Student ID</th>
+              <th>Entry Time</th>
+              <th>Exit Time</th>
+              <th>Late?</th>
+              <th>Remarks</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- VIOLATIONS SECTION -->
+    <section class="section" id="section-violations">
+      <div class="card">
+        <h3>Add Violation</h3>
+        <form id="violation-form">
+          <div>
+            <label>Student ID</label>
+            <input type="text" id="vio-student-id" placeholder="e.g., student_105" required />
+          </div>
+          <div>
+            <label>Type</label>
+            <input type="text" id="vio-type" placeholder="Late Entry / Noise / Damage" required />
+          </div>
+          <div class="input-wrapper">
+            <label>Date</label>
+            <span class="input-bubble">📅 YYYY-MM-DD</span>
+            <button type="button" class="datetime-display-btn" id="vio-date-btn" data-target="vio-date">
+              <span id="vio-date-display">Click to select date</span>
+              <span class="datetime-icon">📅</span>
+            </button>
+            <input type="hidden" id="vio-date" required />
+          </div>
+          <div>
+            <label>Fine Amount</label>
+            <input type="number" id="vio-fine" placeholder="Enter amount" required />
+          </div>
+          <div>
+            <label>Status</label>
+            <select id="vio-status">
+              <option value="unpaid">Unpaid</option>
+              <option value="paid">Paid</option>
+            </select>
+          </div>
+          <div>
+            <button type="submit" class="btn btn-primary">💾 Save Violation</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="toolbar">
+          <button id="reload-violations" class="btn btn-secondary">📋 All Violations</button>
+          <button id="show-unpaid" class="btn btn-secondary">💰 Unpaid Only</button>
+        </div>
+        <table id="violations-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Student ID</th>
+              <th>Type</th>
+              <th>Date</th>
+              <th>Fine</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- FIRESTORE LOGIC -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+    import {
+      getFirestore, collection, getDocs, addDoc, setDoc, doc,
+      deleteDoc, query, where
+    } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCyLcuFTM4K4MyXz1tAUbUliH0cv7i3CY",
+      authDomain: "hostel-tracker-ea872.firebaseapp.com",
+      projectId: "hostel-tracker-ea872",
+      storageBucket: "hostel-tracker-ea872.firebasestorage.app",
+      messagingSenderId: "427262953532",
+      appId: "1:427262953532:web:d5e1e3475404663f8f31b9"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // ---------- MODAL LOGIC ----------
+    const datetimeModal = document.getElementById('datetime-modal');
+    const dateModal = document.getElementById('date-modal');
+    const modalDatetimeInput = document.getElementById('modal-datetime-input');
+    const modalDateInput = document.getElementById('modal-date-input');
+    const modalTitle = document.getElementById('modal-title');
+    const modalLabel = document.getElementById('modal-label');
+    
+    let currentTarget = null;
+    let currentDisplayId = null;
+    let isDateOnly = false;
+
+    // Open datetime modal
+    function openDateTimeModal(targetId, displayId, title, label) {
+      currentTarget = targetId;
+      currentDisplayId = displayId;
+      isDateOnly = false;
+      modalTitle.textContent = title;
+      modalLabel.textContent = label;
+      
+      const currentValue = document.getElementById(targetId).value;
+      modalDatetimeInput.value = currentValue || '';
+      
+      datetimeModal.classList.add('active');
+    }
+
+    // Open date modal
+    function openDateModal(targetId, displayId) {
+      currentTarget = targetId;
+      currentDisplayId = displayId;
+      isDateOnly = true;
+      
+      const currentValue = document.getElementById(targetId).value;
+      modalDateInput.value = currentValue || '';
+      
+      dateModal.classList.add('active');
+    }
+
+    // Close modals
+    function closeModals() {
+      datetimeModal.classList.remove('active');
+      dateModal.classList.remove('active');
+      currentTarget = null;
+      currentDisplayId = null;
+    }
+
+    // Confirm datetime
+    document.getElementById('modal-confirm').addEventListener('click', () => {
+      const value = modalDatetimeInput.value;
+      if (value) {
+        document.getElementById(currentTarget).value = value;
+        const displayBtn = document.getElementById(currentDisplayId);
+        displayBtn.textContent = new Date(value).toLocaleString();
+        displayBtn.classList.add('has-value');
+      }
+      closeModals();
+    });
+
+    // Confirm date
+    document.getElementById('date-modal-confirm').addEventListener('click', () => {
+      const value = modalDateInput.value;
+      if (value) {
+        document.getElementById(currentTarget).value = value;
+        const displayBtn = document.getElementById(currentDisplayId);
+        displayBtn.textContent = new Date(value).toLocaleDateString();
+        displayBtn.classList.add('has-value');
+      }
+      closeModals();
+    });
+
+    // Cancel buttons
+    document.getElementById('modal-cancel').addEventListener('click', closeModals);
+    document.getElementById('date-modal-cancel').addEventListener('click', closeModals);
+    document.getElementById('modal-close').addEventListener('click', closeModals);
+    document.getElementById('date-modal-close').addEventListener('click', closeModals);
+
+    // Close on overlay click
+    datetimeModal.addEventListener('click', (e) => {
+      if (e.target === datetimeModal) closeModals();
+    });
+    dateModal.addEventListener('click', (e) => {
+      if (e.target === dateModal) closeModals();
+    });
+
+    // Attach to datetime buttons
+    document.getElementById('entry-time-btn').addEventListener('click', () => {
+      openDateTimeModal('entry-time', 'entry-time-display', '📅 Select Entry Time', 'Choose entry date and time');
+    });
+    
+    document.getElementById('exit-time-btn').addEventListener('click', () => {
+      openDateTimeModal('exit-time', 'exit-time-display', '📅 Select Exit Time', 'Choose exit date and time');
+    });
+
+    // Attach to date button
+    document.getElementById('vio-date-btn').addEventListener('click', () => {
+      openDateModal('vio-date', 'vio-date-display');
+    });
+
+    // ---------- NAVBAR ----------
+    const navButtons = document.querySelectorAll(".nav-btn");
+    const sections = {
+      students: document.getElementById("section-students"),
+      entry: document.getElementById("section-entry"),
+      violations: document.getElementById("section-violations")
+    };
+    const titleEl = document.getElementById("section-title");
+
+    navButtons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        navButtons.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        const key = btn.dataset.sectionBtn;
+        titleEl.textContent =
+          key === "students" ? "👥 Students" :
+          key === "entry" ? "📋 Entry Logs" : "⚠️ Violations";
+
+        Object.entries(sections).forEach(([k, sec]) => {
+          sec.classList.toggle("active", k === key);
+        });
+      });
+    });
+
+    // ---------- STUDENTS ----------
+    const studentForm = document.getElementById("student-form");
+    const studentsTbody = document.querySelector("#students-table tbody");
+    const reloadStudentsBtn = document.getElementById("reload-students");
+
+    async function loadStudents() {
+      studentsTbody.innerHTML = "<tr class='loading-row'><td colspan='7' style='text-align:center; padding:24px;'>⏳ Loading students...</td></tr>";
+      const snap = await getDocs(collection(db, "students"));
+      let html = "";
+      snap.forEach(d => {
+        const s = d.data();
+        html += `
+          <tr>
+            <td>${d.id}</td>
+            <td>${s.name || ""}</td>
+            <td>${s.department || ""}</td>
+            <td>${s.room_no || ""}</td>
+            <td>${s.phone || ""}</td>
+            <td>${s.parent_contact || ""}</td>
+            <td><button class="btn btn-danger btn-del-student" data-id="${d.id}">🗑️ Delete</button></td>
+          </tr>`;
+      });
+      studentsTbody.innerHTML = html || "<tr><td colspan='7' style='text-align:center; padding:24px;'>No students found.</td></tr>";
+    }
+
+    studentForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const id = document.getElementById("student-id").value.trim();
+      const data = {
+        name: document.getElementById("student-name").value.trim(),
+        department: document.getElementById("student-dept").value.trim(),
+        room_no: document.getElementById("student-room").value.trim(),
+        phone: document.getElementById("student-phone").value.trim(),
+        parent_contact: document.getElementById("student-parent").value.trim()
+      };
+      try {
+        if (id) {
+          await setDoc(doc(db, "students", id), data, { merge: true });
+          alert("✅ Student saved with ID: " + id);
+        } else {
+          const ref = await addDoc(collection(db, "students"), data);
+          alert("✅ Student added with ID: " + ref.id);
+        }
+        studentForm.reset();
+        loadStudents();
+      } catch (err) {
+        console.error(err);
+        alert("❌ Error saving student");
+      }
+    });
+
+    studentsTbody.addEventListener("click", async (e) => {
+      if (e.target.classList.contains("btn-del-student")) {
+        const id = e.target.dataset.id;
+        if (confirm("⚠️ Delete student " + id + "?")) {
+          await deleteDoc(doc(db, "students", id));
+          loadStudents();
+        }
+      }
+    });
+
+    reloadStudentsBtn.addEventListener("click", loadStudents);
+
+    // ---------- ENTRY LOGS ----------
+    const entryForm = document.getElementById("entry-form");
+    const entryTbody = document.querySelector("#entry-table tbody");
+    const reloadEntriesBtn = document.getElementById("reload-entries");
+    const showLateEntriesBtn = document.getElementById("show-late-entries");
+
+    async function renderEntrySnapshot(snap) {
+      let html = "";
+      snap.forEach(d => {
+        const e = d.data();
+        // Format datetime for display
+        const formatDateTime = (dt) => {
+          if (!dt) return "";
+          try {
+            return new Date(dt).toLocaleString();
+          } catch {
+            return dt;
+          }
+        };
+        html += `
+          <tr>
+            <td>${d.id}</td>
+            <td>${e.student_id || ""}</td>
+            <td>${formatDateTime(e.entry_time)}</td>
+            <td>${formatDateTime(e.exit_time)}</td>
+            <td>${e.is_late_entry ? "✅ Yes" : "❌ No"}</td>
+            <td>${e.remarks || ""}</td>
+          </tr>`;
+      });
+      entryTbody.innerHTML = html || "<tr><td colspan='6' style='text-align:center; padding:24px;'>No logs found.</td></tr>";
+    }
+
+    async function loadEntryLogs() {
+      entryTbody.innerHTML = "<tr class='loading-row'><td colspan='6' style='text-align:center; padding:24px;'>⏳ Loading entry logs...</td></tr>";
+      const snap = await getDocs(collection(db, "entry_logs"));
+      renderEntrySnapshot(snap);
+    }
+
+    async function loadLateEntries() {
+      entryTbody.innerHTML = "<tr class='loading-row'><td colspan='6' style='text-align:center; padding:24px;'>⏳ Loading late entries...</td></tr>";
+      const q = query(collection(db, "entry_logs"), where("is_late_entry", "==", true));
+      const snap = await getDocs(q);
+      renderEntrySnapshot(snap);
+    }
+
+    entryForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const entryTime = document.getElementById("entry-time").value.trim();
+      const exitTime = document.getElementById("exit-time").value.trim();
+      const studentId = document.getElementById("entry-student-id").value.trim();
+      const isLateEntry = document.getElementById("is-late-entry").value === "true";
+      
+      const data = {
+        student_id: studentId,
+        entry_time: entryTime,
+        exit_time: exitTime,
+        is_late_entry: isLateEntry,
+        remarks: document.getElementById("entry-remarks").value.trim()
+      };
+      
+      try {
+        // Save entry log
+        await addDoc(collection(db, "entry_logs"), data);
+        
+        // If it's a late entry, automatically create a violation
+        if (isLateEntry) {
+          const violationData = {
+            student_id: studentId,
+            type: "Late Entry",
+            date: entryTime.split('T')[0], // Extract date from datetime
+            fine_amount: 200,
+            status: "unpaid"
+          };
+          await addDoc(collection(db, "violations"), violationData);
+          alert("✅ Entry log saved\n⚠️ Late entry violation created (Fine: ₹200)");
+        } else {
+          alert("✅ Entry log saved");
+        }
+        
+        entryForm.reset();
+        // Reset display buttons
+        document.getElementById('entry-time-display').textContent = 'Click to select date & time';
+        document.getElementById('exit-time-display').textContent = 'Click to select date & time';
+        document.getElementById('entry-time-display').classList.remove('has-value');
+        document.getElementById('exit-time-display').classList.remove('has-value');
+        loadEntryLogs();
+      } catch (err) {
+        console.error(err);
+        alert("❌ Error saving entry log");
+      }
+    });
+
+    reloadEntriesBtn.addEventListener("click", loadEntryLogs);
+    showLateEntriesBtn.addEventListener("click", loadLateEntries);
+
+    // ---------- VIOLATIONS ----------
+    const violationForm = document.getElementById("violation-form");
+    const violationsTbody = document.querySelector("#violations-table tbody");
+    const reloadViolationsBtn = document.getElementById("reload-violations");
+    const showUnpaidBtn = document.getElementById("show-unpaid");
+
+    async function renderViolationsSnapshot(snap) {
+      let html = "";
+      snap.forEach(d => {
+        const v = d.data();
+        const statusBadge = v.status === "paid" 
+          ? "<span style='background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;'>✅ Paid</span>"
+          : "<span style='background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;'>⏳ Unpaid</span>";
+        
+        const actionButtons = v.status === "unpaid"
+          ? `<button class="btn btn-primary btn-mark-paid" data-id="${d.id}" style="padding: 8px 16px; font-size: 13px; margin-right: 6px; position: relative; z-index: 1;">✓ Mark Paid</button>
+             <button class="btn btn-danger btn-del-violation" data-id="${d.id}" style="position: relative; z-index: 1;">🗑️ Delete</button>`
+          : `<button class="btn btn-danger btn-del-violation" data-id="${d.id}" style="position: relative; z-index: 1;">🗑️ Delete</button>`;
+        
+        html += `
+          <tr>
+            <td>${d.id}</td>
+            <td>${v.student_id || ""}</td>
+            <td>${v.type || ""}</td>
+            <td>${v.date || ""}</td>
+            <td><strong>₹${v.fine_amount || 0}</strong></td>
+            <td>${statusBadge}</td>
+            <td style="white-space: nowrap;">${actionButtons}</td>
+          </tr>`;
+      });
+      violationsTbody.innerHTML = html || "<tr><td colspan='7' style='text-align:center; padding:24px;'>No violations found.</td></tr>";
+    }
+
+    async function loadViolations() {
+      violationsTbody.innerHTML = "<tr class='loading-row'><td colspan='7' style='text-align:center; padding:24px;'>⏳ Loading violations...</td></tr>";
+      const snap = await getDocs(collection(db, "violations"));
+      renderViolationsSnapshot(snap);
+    }
+
+    async function loadUnpaidViolations() {
+      violationsTbody.innerHTML = "<tr class='loading-row'><td colspan='7' style='text-align:center; padding:24px;'>⏳ Loading unpaid violations...</td></tr>";
+      const q = query(collection(db, "violations"), where("status", "==", "unpaid"));
+      const snap = await getDocs(q);
+      renderViolationsSnapshot(snap);
+    }
+
+    violationForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const data = {
+        student_id: document.getElementById("vio-student-id").value.trim(),
+        type: document.getElementById("vio-type").value.trim(),
+        date: document.getElementById("vio-date").value.trim(),
+        fine_amount: Number(document.getElementById("vio-fine").value),
+        status: document.getElementById("vio-status").value
+      };
+      try {
+        await addDoc(collection(db, "violations"), data);
+        alert("✅ Violation saved");
+        violationForm.reset();
+        // Reset display button
+        document.getElementById('vio-date-display').textContent = 'Click to select date';
+        document.getElementById('vio-date-display').classList.remove('has-value');
+        loadViolations();
+      } catch (err) {
+        console.error(err);
+        alert("❌ Error saving violation");
+      }
+    });
+
+    violationsTbody.addEventListener("click", async (e) => {
+      const target = e.target;
+      console.log("Clicked element:", target.className, target.dataset.id);
+      
+      if (target.classList.contains("btn-del-violation")) {
+        const id = target.dataset.id;
+        console.log("Delete button clicked for:", id);
+        if (confirm("⚠️ Delete violation " + id + "?")) {
+          try {
+            await deleteDoc(doc(db, "violations", id));
+            alert("✅ Violation deleted!");
+            loadViolations();
+          } catch (err) {
+            console.error("Delete error:", err);
+            alert("❌ Error deleting violation");
+          }
+        }
+      } else if (target.classList.contains("btn-mark-paid")) {
+        const id = target.dataset.id;
+        console.log("Mark paid button clicked for:", id);
+        if (confirm("💰 Mark this violation as PAID?")) {
+          try {
+            await setDoc(doc(db, "violations", id), { status: "paid" }, { merge: true });
+            alert("✅ Violation marked as paid!");
+            loadViolations();
+          } catch (err) {
+            console.error("Update error:", err);
+            alert("❌ Error updating violation");
+          }
+        }
+      }
+    });
+
+    reloadViolationsBtn.addEventListener("click", loadViolations);
+    showUnpaidBtn.addEventListener("click", loadUnpaidViolations);
+
+    // ---------- INITIAL LOAD ----------
+    loadStudents();
+  </script>
+</body>
+</html>
